@@ -3,9 +3,9 @@ requires = ["setuptools>=82.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "xchem-fragalysis-auth-client"
+name = "xchem-ta-auth-client"
 version = "0.0.0"
-description = "The Fragalysis Stack ISPyB Target Access Authenticator Client"
+description = "The ISPyB Target Access Authenticator Client"
 readme = "README.md"
 keywords = ["api"]
 license = "Apache-2.0"

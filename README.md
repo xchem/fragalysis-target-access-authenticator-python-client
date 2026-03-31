@@ -1,6 +1,6 @@
 # fragalysis-target-access-authenticator-python-client
 
-![PyPI - Version](https://img.shields.io/pypi/v/xchem-fragalysis-auth-client)
+![PyPI - Version](https://img.shields.io/pypi/v/xchem-ta-auth-client)
 
 ![release](https://github.com/xchem/fragalysis-target-access-authenticator-python-client/actions/workflows/release.yaml/badge.svg)
 
