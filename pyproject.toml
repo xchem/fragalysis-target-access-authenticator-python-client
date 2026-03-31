@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=82.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xchem-fragalysis-auth-client"
+version = "0.0.0"
+description = "The Fragalysis Stack ISPyB Target Access Authenticator Client"
+readme = "README.md"
+keywords = ["api"]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: POSIX :: Linux",
+]
+authors = [
+  {name = "Alan Christie", email = "achristie@informaticsmatters.com"},
+]
+maintainers = [
+  {name = "Alan Christie", email = "achristie@informaticsmatters.com"},
+]
+requires-python = ">=3.13"
+dependencies = [
+  "requests>=2.32.4,<3",
+]
+
+[project.urls]
+Repository = "https://github.com/xchem/fragalysis-target-access-authenticator-python-client.git"
