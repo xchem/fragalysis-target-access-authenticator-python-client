@@ -24,6 +24,14 @@ The module requires two items, extracted from the environment: -
     comply with http:// protocol)
 -   `TA_AUTH_QUERY_KEY` - A 'secret' key the service expects in request headers.
 
+## Usage
+After installing from PyPI, access the `ta_auth_connector` functions directly
+via the connector module: -
+
+    import ta_auth_connector
+
+    ping_response: TasAuthPingGetResponse = ta_auth_connector.get_auth_ping()
+
 ## The authenticator service
 See: -
 
