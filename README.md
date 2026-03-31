@@ -47,8 +47,9 @@ a publicly visible target) you will not be permitted access to the material
 unless, according to ISPyB, you are a member of proposal `32627` and visit `66`.
 
 Also, although everyone can _view_ publicly visible targets you are not permitted
-to alter or add material to the target unless you are a member of the proposal `32627`
-and visit `66`. Everyone can _see_ public targets, but only members of the TAS can edit.
+to alter or add material to the target unless you are a member of the corresponding
+proposal and visit. Everyone can _see_ public targets, but only members of the TAS
+can edit.
 
 ## The authenticator service
 See: -
