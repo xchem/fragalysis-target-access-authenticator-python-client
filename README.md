@@ -32,6 +32,24 @@ via the connector module: -
 
     ping_response: TasAuthPingGetResponse = ta_auth_connector.get_auth_ping()
 
+## Target access strings
+A _Target Access String_ (**TAS**) is the concatenation of a two-character **code**
+(lower case), **proposal number**, and **visit number** formatted
+as `<code><proposal>-<visit>`: -
+
+-   lb12345-1
+-   lb32627-66
+
+## Rules
+Access to non-public Fragalysis Targets is limited to users who are members
+of the associated TAS. If a target belongs to `lb32627-66` (and `lb32627-66` is not
+a publicly visible target) you will not be permitted access to the material
+unless, according to ISPyB, you are a member of proposal `32627` and visit `66`.
+
+Also, although everyone can _view_ publicly visible targets you are not permitted
+to alter or add material to the target unless you are a member of the proposal `32627`
+and visit `66`. Everyone can _see_ public targets, but only members of the TAS can edit.
+
 ## The authenticator service
 See: -
 
