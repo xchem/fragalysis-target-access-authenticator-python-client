@@ -4,6 +4,7 @@ Provides the following functions, that access the authenticator Pod: -
 - get_auth_version()
 - get_auth_ping()
 - get_auth_target_access(username)
+- get_auth_users(target_access_string)
 """
 
 import logging
@@ -38,6 +39,21 @@ class TasAuthPingGetResponse:
     """The TA authenticator ping response."""
 
     ping: str
+
+
+@dataclass
+class TasAuthUsersGetResponse:
+    """The TA authenticator '/users/{tas}' response.
+
+    Unlike get_auth_target_access(), which cannot fail from the caller's point
+    of view, this response separates "the TAS has no members" from "we could
+    not find out". 'error' is None when the service answered, in which case an
+    empty 'users' genuinely means nobody is a member. Otherwise 'error'
+    describes what went wrong and 'users' is empty and must not be relied on.
+    """
+
+    users: set[str]
+    error: str | None = None
 
 
 def get_auth_version() -> TasAuthVersionGetResponse:
@@ -163,3 +179,60 @@ def get_auth_target_access(username: str) -> set[str]:
     logger.info('TA:GET:%s (got %d for %s)', url, len(target_access), username)
 
     return target_access
+
+
+def get_auth_users(target_access_string: str) -> TasAuthUsersGetResponse:
+    """Returns the set of users (logins) that are members of the given target
+    access string, as reported by the TA authentication service.
+
+    An empty set of users is only meaningful when the response carries no
+    error - see TasAuthUsersGetResponse.
+    """
+    assert target_access_string
+
+    no_users: set[str] = set()
+
+    if not _TA_AUTH_SERVICE:
+        logger.debug('Skipping query - service is not set (TA_AUTH_SERVICE)')
+        return TasAuthUsersGetResponse(
+            users=no_users, error='AUTH_SERVICE_NOT_DEFINED'
+        )
+    if not _TA_AUTH_QUERY_KEY:
+        logger.debug('Skipping query - query key is not set (TA_AUTH_QUERY_KEY)')
+        return TasAuthUsersGetResponse(
+            users=no_users, error='SERVICE_QUERY_KEY_NOT_DEFINED'
+        )
+
+    url: str = f'{_TA_AUTH_SERVICE}/users/{quote(target_access_string, safe="")}'
+    resp: requests.Response | None = None
+    try:
+        resp = requests.get(url, headers=_QUERY_HEADERS, timeout=_URL_TIMEOUT)
+    except requests.exceptions.RequestException as ex:  # pylint: disable=broad-except
+        logger.error('TA:GET:%s RequestException (%s)', url, ex)
+    except Exception as ex:  # pylint: disable=broad-exception-caught
+        logger.error('TA:GET:%s Exception (%s)', url, ex)
+
+    if resp is None:
+        logger.warning('TA:GET:%s (no response)', url)
+        return TasAuthUsersGetResponse(users=no_users, error='No response')
+    if resp.status_code not in (200,):
+        logger.warning('TA:GET:%s [%s] (status not 200)', url, resp.status_code)
+        return TasAuthUsersGetResponse(
+            users=no_users, error=f'Status was {resp.status_code} (not 200)'
+        )
+    elif 'application/json' not in resp.headers.get('Content-Type', ''):
+        logger.warning('TA:GET:%s (empty response)', url)
+        return TasAuthUsersGetResponse(users=no_users, error='Response was not JSON')
+    elif 'count' not in resp.json():
+        logger.warning('TA:GET:%s (no count)', url)
+        return TasAuthUsersGetResponse(users=no_users, error='Response had no count')
+    elif 'users' not in resp.json():
+        logger.warning('TA:GET:%s (no users)', url)
+        return TasAuthUsersGetResponse(users=no_users, error='Response had no users')
+
+    users: set[str] = set(resp.json()['users'])
+    logger.info(
+        'TA:GET:%s (got %d for %s)', url, len(users), target_access_string
+    )
+
+    return TasAuthUsersGetResponse(users=users)
