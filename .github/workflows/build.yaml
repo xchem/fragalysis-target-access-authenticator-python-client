@@ -1,0 +1,34 @@
+---
+# The package build and test process, run on every push and pull request.
+# The corresponding release (and PyPI publish) process is in release.yaml.
+name: Build
+
+on:
+  push:
+    branches-ignore:
+    - 'main'
+  pull_request:
+    branches:
+    - 'main'
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.13'
+    - name: Install uv
+      run: |
+        pip install --upgrade pip
+        pip install uv --user
+    - name: Test
+      run: uv run pytest
+    - name: Build
+      run: uv build

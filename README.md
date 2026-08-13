@@ -11,10 +11,26 @@ providing the following functions: -
 ```python
 def get_auth_target_access(username: str) -> set[str]:
     [...]
+def get_auth_users(target_access_string: str) -> TasAuthUsersGetResponse:
+    [...]
 def get_auth_version() -> TasAuthVersionGetResponse:
     [...]
 def get_auth_ping() -> TasAuthPingGetResponse:
     [...]
+```
+
+`get_auth_users()` (which needs authenticator **1.5.0** or later) returns a
+response rather than a bare set because, unlike `get_auth_target_access()`, it
+has to distinguish _"the TAS has no members"_ from _"we could not find out"_: -
+
+```python
+response = ta_auth_connector.get_auth_users("lb32627-66")
+if response.error:
+    # We do not know who the members are - 'users' is empty but meaningless
+    ...
+else:
+    # 'users' is the membership, and may legitimately be empty
+    ...
 ```
 
 The module requires two items, extracted from the environment: -
