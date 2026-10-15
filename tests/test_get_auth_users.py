@@ -198,3 +198,73 @@ def test_empty_target_access_string_is_rejected(configured, record_get):
         ta_auth_connector.get_auth_users("")
 
     assert call == {}
+
+
+def test_returns_the_members_the_service_reports(configured, record_get):
+    """Authenticator 1.6.0 adds 'members' - each user with their names."""
+    record_get(
+        _FakeResponse(
+            json_body={
+                "count": 2,
+                "users": ["abc12345", "xyz98765"],
+                "members": [
+                    {"login": "abc12345", "given_name": "Dave", "family_name": "Lister"},
+                    {"login": "xyz98765", "given_name": None, "family_name": None},
+                ],
+            }
+        )
+    )
+
+    response = ta_auth_connector.get_auth_users(_TAS)
+
+    assert response.members == [
+        ta_auth_connector.TasAuthMember("abc12345", "Dave", "Lister"),
+        ta_auth_connector.TasAuthMember("xyz98765"),
+    ]
+    assert response.error is None
+
+
+def test_members_without_names_from_an_older_service(configured, record_get):
+    """An authenticator older than 1.6.0 has no 'members'.
+
+    The members are then the users (sorted by login) without names, so the
+    caller has one shape to deal with whichever service it talks to.
+    """
+    record_get(_FakeResponse(json_body={"count": 2, "users": ["xyz98765", "abc12345"]}))
+
+    response = ta_auth_connector.get_auth_users(_TAS)
+
+    assert response.members == [
+        ta_auth_connector.TasAuthMember("abc12345"),
+        ta_auth_connector.TasAuthMember("xyz98765"),
+    ]
+    assert response.error is None
+
+
+def test_member_without_a_login_is_an_error(configured, record_get):
+    """A member we cannot identify is a malformed answer, not one to skip."""
+    record_get(
+        _FakeResponse(
+            json_body={
+                "count": 1,
+                "users": ["abc12345"],
+                "members": [{"given_name": "Dave", "family_name": "Lister"}],
+            }
+        )
+    )
+
+    response = ta_auth_connector.get_auth_users(_TAS)
+
+    assert response.users == set()
+    assert response.members == []
+    assert response.error is not None
+
+
+def test_errors_have_no_members(configured, record_get):
+    """As with 'users', an error leaves 'members' empty."""
+    record_get(_FakeResponse(status_code=503))
+
+    response = ta_auth_connector.get_auth_users(_TAS)
+
+    assert response.members == []
+    assert response.error is not None
