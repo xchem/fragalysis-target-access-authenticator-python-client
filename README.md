@@ -33,6 +33,11 @@ else:
     ...
 ```
 
+From **1.2.0** the response also has `members`, the same users (sorted by login)
+as `TasAuthMember` objects carrying each user's `given_name` and `family_name`.
+These need authenticator **1.6.0** or later - with an older authenticator the
+members are the users with names of `None`.
+
 The module requires two items, extracted from the environment: -
 
 -   `TA_AUTH_SERVICE` - The service hostname. In cluster this might be

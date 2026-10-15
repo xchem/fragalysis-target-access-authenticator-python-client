@@ -8,7 +8,7 @@ Provides the following functions, that access the authenticator Pod: -
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 from urllib.parse import quote
 
@@ -41,6 +41,17 @@ class TasAuthPingGetResponse:
     ping: str
 
 
+@dataclass(frozen=True)
+class TasAuthMember:
+    """A member of a target access string. The names are None if the
+    authenticator has none for the user (or is older than 1.6.0).
+    """
+
+    login: str
+    given_name: str | None = None
+    family_name: str | None = None
+
+
 @dataclass
 class TasAuthUsersGetResponse:
     """The TA authenticator '/users/{tas}' response.
@@ -50,10 +61,14 @@ class TasAuthUsersGetResponse:
     not find out". 'error' is None when the service answered, in which case an
     empty 'users' genuinely means nobody is a member. Otherwise 'error'
     describes what went wrong and 'users' is empty and must not be relied on.
+
+    'members' holds the same users, sorted by login, with their names. It is
+    empty whenever 'users' is.
     """
 
     users: set[str]
     error: str | None = None
+    members: list[TasAuthMember] = field(default_factory=list)
 
 
 def get_auth_version() -> TasAuthVersionGetResponse:
@@ -231,8 +246,29 @@ def get_auth_users(target_access_string: str) -> TasAuthUsersGetResponse:
         return TasAuthUsersGetResponse(users=no_users, error='Response had no users')
 
     users: set[str] = set(resp.json()['users'])
+
+    # Authenticators from 1.6.0 also return 'members' (the users with their names).
+    # For older authenticators the members are the users without names.
+    members: list[TasAuthMember] = []
+    if 'members' in resp.json():
+        for member in resp.json()['members']:
+            if not member.get('login'):
+                logger.warning('TA:GET:%s (member without a login)', url)
+                return TasAuthUsersGetResponse(
+                    users=no_users, error='Response had a member without a login'
+                )
+            members.append(
+                TasAuthMember(
+                    login=member['login'],
+                    given_name=member.get('given_name'),
+                    family_name=member.get('family_name'),
+                )
+            )
+    else:
+        members = [TasAuthMember(login=login) for login in sorted(users)]
+
     logger.info(
         'TA:GET:%s (got %d for %s)', url, len(users), target_access_string
     )
 
-    return TasAuthUsersGetResponse(users=users)
+    return TasAuthUsersGetResponse(users=users, members=members)
